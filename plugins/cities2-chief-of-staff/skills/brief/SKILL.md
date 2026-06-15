@@ -1,5 +1,5 @@
 ---
-name: cities2-chief-of-staff
+name: brief
 description: "Use when advising a Cities: Skylines II mayor from local city evidence, city reports, Save Investigator output, DataExport samples, or InfoLoomBridge exports"
 ---
 
@@ -28,6 +28,34 @@ when available.
    explicitly requests stale or offline evidence.
 5. Treat Cities2-DataExport, Cities2-InfoLoomBridge, and Save Investigator as
    separate evidence sources with separate confidence.
+
+## Companion Mod Install Help
+
+When the user wants better Chief of Staff evidence, help install either
+companion mod from its public repo:
+
+| Mod | Repo | Project | Verifies |
+| --- | --- | --- | --- |
+| Cities2-DataExport | https://github.com/mayor-modder/Cities2-DataExport | `CS2DataExport.csproj` | `ModsData/CS2DataExport/latest.json` |
+| Cities2-InfoLoomBridge | https://github.com/mayor-modder/Cities2-InfoLoomBridge | `InfoLoomBridge.csproj` | `ModsData/InfoLoomBridge/latest.json` |
+
+Use PowerShell instructions. Tell the user to close Cities: Skylines II, find
+the project file under the extracted repo, set `DOTNET_ROLL_FORWARD=Major`,
+clear `obj` and `bin` with `Remove-Item`, then run `dotnet build <project> -c
+Release -p:LangVersion=latest`. The Cities: Skylines II mod toolchain copies
+the local build into the user's Mods folder. Do not tell users to enable the
+local mod in the mod list.
+
+InfoLoomBridge also needs BruceyBoy's InfoLoom package, published as Paradox
+mod 91433 and sourced from https://github.com/bruceyboy24804/InfoLoom:
+https://mods.paradoxplaza.com/mods/91433/Windows. In local files this appears
+as InfoLoom Two assemblies. Before saying the dependency is present, check the
+CS2 local data root for `InfoLoomTwo.dll` or `InfoLoomTwo_win_x86_64.dll` under
+manual installs such as `Mods/InfoLoom` or `Mods/InfoLoomTwo`, and subscribed
+Paradox cache installs under `.cache/Mods/pdx_mods`. Do not treat unrelated
+InfoLoom-family mods as sufficient. If InfoLoomBridge cannot use the supported
+InfoLoom package, it can still write `latest.json` with `status: "error"` and a
+diagnostic message.
 
 ## Briefing Format
 

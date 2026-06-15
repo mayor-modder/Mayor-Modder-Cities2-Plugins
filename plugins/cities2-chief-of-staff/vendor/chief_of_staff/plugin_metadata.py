@@ -15,7 +15,7 @@ PRIVACY_URL = "https://github.com/mayor-modder/Cities2-Chief-of-Staff/blob/main/
 TERMS_URL = "https://github.com/mayor-modder/Cities2-Chief-of-Staff#license"
 LICENSE = "MIT"
 KEYWORDS = ["cities-skylines-ii", "mcp", "city-analysis", "agent-skills"]
-SKILL_NAMES = ("cities2-chief-of-staff",)
+SKILL_NAMES = ("brief",)
 
 
 def _dumps(obj: object) -> str:
