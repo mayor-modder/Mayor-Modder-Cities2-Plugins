@@ -68,13 +68,19 @@ public static class TransportDomainFactsExtractor
                 group =>
                 {
                     var line = lineByEntityIndex[group.Key];
+                    var topStop = group
+                        .OrderByDescending(stop => stop.Count)
+                        .ThenBy(stop => stop.EntityIndex)
+                        .First();
                     return new TransportLineQueueFact(
                         line.EntityIndex,
                         line.RouteNumber,
                         line.ColorHex,
                         group.Count(),
                         group.Sum(stop => stop.Count),
-                        group.Max(stop => stop.Count));
+                        topStop.Count,
+                        topStop.EntityIndex,
+                        topStop.OwnerEntityIndex);
                 })
             .OrderByDescending(line => line.TotalWaitingPassengers)
             .ThenByDescending(line => line.MaxStopQueue)

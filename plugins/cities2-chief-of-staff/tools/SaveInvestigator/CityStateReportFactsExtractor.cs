@@ -103,9 +103,12 @@ public static class CityStateReportFactsExtractor
         CityUnderstandingDomainFact understanding)
     {
         var topQueue = transportReportFacts.TopQueueHotspots.FirstOrDefault();
+        var topQueueStation = topQueue?.TopStop?.StationName is { Length: > 0 } stationName
+            ? $", station={stationName}"
+            : string.Empty;
         var summary = topQueue is null
             ? understanding.Summary
-            : $"{understanding.Summary} Top saved queue hotspot: {topQueue.LineDisplayName} total={topQueue.TotalWaitingPassengers}, max_stop={topQueue.MaxStopQueue}.";
+            : $"{understanding.Summary} Top saved queue hotspot: {topQueue.LineDisplayName} total={topQueue.TotalWaitingPassengers}, max_stop={topQueue.MaxStopQueue}{topQueueStation}.";
 
         var evidence = understanding.EvidenceNotes
             .Concat(transportReportFacts.JoinCoverage.Select(coverage => $"join_coverage:{coverage.Mode}:{coverage.CoverageStatus}"))

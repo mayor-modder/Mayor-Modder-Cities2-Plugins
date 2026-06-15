@@ -427,9 +427,12 @@ internal static class ProgramSummaryBuilder
                 .OrderBy(group => group.Mode, StringComparer.Ordinal)
                 .Select(group => $"{group.Mode}={group.StationCount}"));
         var topQueue = transportReportFacts.TopQueueHotspots.FirstOrDefault();
+        var topQueueStation = topQueue?.TopStop?.StationName is { Length: > 0 } stationName
+            ? $" station=\"{stationName}\""
+            : string.Empty;
         var topQueueLine = topQueue is null
             ? "  top queue               none"
-            : $"  top queue               {topQueue.LineDisplayName} total={topQueue.TotalWaitingPassengers} max_stop={topQueue.MaxStopQueue}";
+            : $"  top queue               {topQueue.LineDisplayName} total={topQueue.TotalWaitingPassengers} max_stop={topQueue.MaxStopQueue}{topQueueStation}";
         var namedStations = string.Join(
             "; ",
             transportReportFacts.StationGroups

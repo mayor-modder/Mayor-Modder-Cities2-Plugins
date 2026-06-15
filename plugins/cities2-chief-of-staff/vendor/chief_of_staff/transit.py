@@ -21,6 +21,7 @@ def build_transit_snapshot(inventory: SourceInventory) -> dict[str, Any]:
         "lines": live_lines or _saved_lines(save, station_names_by_line),
         "stations": _stations(save),
         "station_services": station_services,
+        "saved_queue_hotspots": _saved_queue_hotspots(save),
         "unresolved_live_stop_queues": _unresolved_live_stop_queues(live_lines),
     }
 
@@ -50,6 +51,13 @@ def _stations(save: SourceStatus | None) -> list[dict[str, Any]]:
     if not save or not save.available:
         return []
     value = save.summary.get("transit_stations")
+    return value if isinstance(value, list) else []
+
+
+def _saved_queue_hotspots(save: SourceStatus | None) -> list[dict[str, Any]]:
+    if not save or not save.available:
+        return []
+    value = save.summary.get("transit_saved_queue_hotspots")
     return value if isinstance(value, list) else []
 
 

@@ -71,6 +71,7 @@ public static class TransportReportFactsExtractor
             .OrderBy(group => group.Mode, StringComparer.Ordinal)
             .ToList();
 
+        var stationByLineAndQueueStopEntity = BuildStationByLineAndQueueStopEntity(transportServiceJoinFacts);
         var queueHotspots = transportDomainFacts.LineQueues
             .OrderByDescending(line => line.TotalWaitingPassengers)
             .ThenByDescending(line => line.MaxStopQueue)
@@ -85,7 +86,8 @@ public static class TransportReportFactsExtractor
                     line.RouteNumber,
                     line.ColorHex,
                     line.TotalWaitingPassengers,
-                    line.MaxStopQueue))
+                    line.MaxStopQueue,
+                    ResolveTopQueueStop(line, stationByLineAndQueueStopEntity)))
             .ToList();
         var joinCoverage = (transportServiceJoinFacts?.ModeCoverage ?? new ReadOnlyCollection<TransportJoinModeCoverageFact>([]))
             .Select(
@@ -103,6 +105,89 @@ public static class TransportReportFactsExtractor
             new ReadOnlyCollection<TransportReportStationGroupFact>(stationGroups),
             new ReadOnlyCollection<TransportReportQueueHotspotFact>(queueHotspots),
             new ReadOnlyCollection<TransportReportJoinCoverageFact>(joinCoverage));
+    }
+
+    private static Dictionary<(int LineEntityIndex, int QueueStopEntityIndex), TransportServiceJoinStationFact> BuildStationByLineAndQueueStopEntity(
+        TransportServiceJoinFacts? transportServiceJoinFacts)
+    {
+        var result = new Dictionary<(int LineEntityIndex, int QueueStopEntityIndex), TransportServiceJoinStationFact>();
+        if (transportServiceJoinFacts is null)
+        {
+            return result;
+        }
+
+        foreach (var station in transportServiceJoinFacts.Stations)
+        {
+            foreach (var line in station.ExactLines)
+            {
+                if (!TryParseEvidenceEntity(line.EvidenceNotes, "join_entity:", out var queueStopEntityIndex))
+                {
+                    continue;
+                }
+
+                result[(line.LineEntityIndex, queueStopEntityIndex)] = station;
+            }
+        }
+
+        return result;
+    }
+
+    private static TransportReportQueueStopFact ResolveTopQueueStop(
+        TransportLineQueueFact line,
+        IReadOnlyDictionary<(int LineEntityIndex, int QueueStopEntityIndex), TransportServiceJoinStationFact> stationByLineAndQueueStopEntity)
+    {
+        if (stationByLineAndQueueStopEntity.TryGetValue((line.EntityIndex, line.TopStopEntityIndex), out var station))
+        {
+            return new TransportReportQueueStopFact(
+                line.TopStopEntityIndex,
+                line.TopStopOwnerEntityIndex,
+                line.MaxStopQueue,
+                station.Name,
+                station.Mode,
+                station.Role,
+                "resolved_by_service_join",
+                new ReadOnlyCollection<string>(
+                    [
+                        "join_path:matched_stop_entity<-connected_line_waypoint_entity",
+                        $"queue_stop_entity:{line.TopStopEntityIndex}",
+                        $"owner_line_entity:{line.EntityIndex}",
+                        $"station_entity:{station.NameEntityIndex}"
+                    ]));
+        }
+
+        return new TransportReportQueueStopFact(
+            line.TopStopEntityIndex,
+            line.TopStopOwnerEntityIndex,
+            line.MaxStopQueue,
+            null,
+            null,
+            null,
+            "unresolved",
+            new ReadOnlyCollection<string>(
+                [
+                    $"queue_stop_entity:{line.TopStopEntityIndex}",
+                    $"owner_line_entity:{line.EntityIndex}",
+                    "missing_service_join_for_queue_stop"
+                ]));
+    }
+
+    private static bool TryParseEvidenceEntity(
+        IReadOnlyCollection<string> evidenceNotes,
+        string prefix,
+        out int entityIndex)
+    {
+        foreach (var note in evidenceNotes)
+        {
+            if (!note.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            return int.TryParse(note[prefix.Length..], out entityIndex);
+        }
+
+        entityIndex = -1;
+        return false;
     }
 
     private static List<TransportReportStationFact> BuildStationReports(

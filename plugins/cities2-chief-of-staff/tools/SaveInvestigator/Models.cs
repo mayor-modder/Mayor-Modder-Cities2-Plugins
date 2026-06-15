@@ -290,7 +290,9 @@ public sealed record TransportLineQueueFact(
     string ColorHex,
     int StopCount,
     int TotalWaitingPassengers,
-    int MaxStopQueue);
+    int MaxStopQueue,
+    int TopStopEntityIndex,
+    int TopStopOwnerEntityIndex);
 
 public sealed record TargetedSaveFacts(
     ReadOnlyCollection<TransportLineFact> TransportLines,
@@ -465,7 +467,18 @@ public sealed record TransportReportQueueHotspotFact(
     int RouteNumber,
     string ColorHex,
     int TotalWaitingPassengers,
-    int MaxStopQueue);
+    int MaxStopQueue,
+    TransportReportQueueStopFact? TopStop = null);
+
+public sealed record TransportReportQueueStopFact(
+    int StopEntityIndex,
+    int OwnerEntityIndex,
+    int WaitingPassengers,
+    string? StationName,
+    string? StationMode,
+    string? StationRole,
+    string ResolutionStatus,
+    ReadOnlyCollection<string> EvidenceNotes);
 
 public sealed record TransportReportJoinCoverageFact(
     string Mode,

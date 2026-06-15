@@ -134,6 +134,7 @@ def _save_investigator_status(output_root: Path, *, use_existing_output: bool) -
     service_joins = _read_json(latest / "transport-service-join-facts.json") or {}
     line_groups = _first_present(transport, "lineGroups", "LineGroups") if isinstance(transport, dict) else None
     station_groups = _first_present(transport, "stationGroups", "StationGroups") if isinstance(transport, dict) else None
+    queue_hotspots = _first_present(transport, "topQueueHotspots", "TopQueueHotspots") if isinstance(transport, dict) else None
     service_join_stations = _first_present(service_joins, "stations", "Stations") if isinstance(service_joins, dict) else None
     return SourceStatus(
         name="saveinvestigator",
@@ -155,6 +156,7 @@ def _save_investigator_status(output_root: Path, *, use_existing_output: bool) -
             "transit_lines": _extract_transit_lines(line_groups),
             "transit_stations": _extract_transit_stations(station_groups),
             "transit_station_services": _extract_transit_station_services(service_join_stations),
+            "transit_saved_queue_hotspots": _extract_saved_queue_hotspots(queue_hotspots),
         },
     )
 
@@ -341,6 +343,52 @@ def _extract_transit_station_services(stations: object) -> list[dict[str, Any]]:
                 }
             )
     return services
+
+
+def _extract_saved_queue_hotspots(queue_hotspots: object) -> list[dict[str, Any]]:
+    if not isinstance(queue_hotspots, list):
+        return []
+    hotspots: list[dict[str, Any]] = []
+    for hotspot in queue_hotspots:
+        if not isinstance(hotspot, dict):
+            continue
+        line_name = _first_present(hotspot, "lineDisplayName", "LineDisplayName")
+        if not line_name:
+            continue
+        top_stop = _first_present(hotspot, "topStop", "TopStop")
+        hotspots.append(
+            {
+                "line_name": str(line_name),
+                "line_entity_index": _first_present(hotspot, "lineEntityIndex", "LineEntityIndex"),
+                "route_number": _first_present(hotspot, "routeNumber", "RouteNumber"),
+                "color": _normalize_color(_first_present(hotspot, "colorHex", "ColorHex")),
+                "total_waiting_passengers": _first_present(
+                    hotspot,
+                    "totalWaitingPassengers",
+                    "TotalWaitingPassengers",
+                ),
+                "max_stop_queue": _first_present(hotspot, "maxStopQueue", "MaxStopQueue"),
+                "top_stop": _extract_saved_queue_stop(top_stop),
+                "source": "save_investigator",
+            }
+        )
+    return hotspots
+
+
+def _extract_saved_queue_stop(top_stop: object) -> dict[str, Any] | None:
+    if not isinstance(top_stop, dict):
+        return None
+    station_name = _first_present(top_stop, "stationName", "StationName")
+    return {
+        "stop_entity_index": _first_present(top_stop, "stopEntityIndex", "StopEntityIndex"),
+        "owner_entity_index": _first_present(top_stop, "ownerEntityIndex", "OwnerEntityIndex"),
+        "waiting_passengers": _first_present(top_stop, "waitingPassengers", "WaitingPassengers"),
+        "station_name": station_name if isinstance(station_name, str) and station_name.strip() else None,
+        "station_mode": _first_present(top_stop, "stationMode", "StationMode"),
+        "station_role": _first_present(top_stop, "stationRole", "StationRole"),
+        "resolution_status": _first_present(top_stop, "resolutionStatus", "ResolutionStatus"),
+        "evidence_notes": _string_list(_first_present(top_stop, "evidenceNotes", "EvidenceNotes")),
+    }
 
 
 def _top_transit_stop(stops: object) -> dict[str, Any] | None:
