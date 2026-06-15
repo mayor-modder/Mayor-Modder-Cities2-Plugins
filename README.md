@@ -1,6 +1,6 @@
 # Mayor Modder Cities2 Plugins
 
-This repository is the shared Codex plugin marketplace for Mayor Modder's
+This repository is the shared Claude and Codex plugin marketplace for Mayor Modder's
 Cities: Skylines II plugins.
 
 It publishes installable plugin package snapshots for:
@@ -15,28 +15,60 @@ The source projects remain separate:
 
 ## Install
 
+### Claude
+
+Add this repository as a Claude plugin marketplace:
+
+```text
+/plugin marketplace add mayor-modder/Mayor-Modder-Cities2-Plugins
+```
+
+Then install the plugin you want from Claude Code or Claude desktop.
+
+### Codex CLI
+
 Add this repository as a Codex plugin marketplace:
 
 ```sh
 codex plugin marketplace add mayor-modder/Mayor-Modder-Cities2-Plugins
 ```
 
-Then open `/plugin` in Codex and install the plugin you want.
+Then install the plugin you want from the marketplace.
+
+### Codex app
+
+Open **Plugins** in the sidebar, click the down arrow next to the `+` button, choose **Add marketplace**, then enter:
+
+```text
+mayor-modder/Mayor-Modder-Cities2-Plugins
+```
 
 Restart Codex after installing or enabling plugin MCP tools.
 
 ## Marketplace
 
-The marketplace manifest is:
+The Codex marketplace manifest is:
 
 ```text
 .agents/plugins/marketplace.json
 ```
 
-Each plugin entry uses a local source path under:
+The Claude marketplace manifest is:
+
+```text
+.claude-plugin/marketplace.json
+```
+
+Codex plugin entries use local source paths under:
 
 ```text
 plugins/
+```
+
+Claude plugin entries use local source paths under:
+
+```text
+integrations/anthropic/
 ```
 
 ## Updating Plugin Snapshots
