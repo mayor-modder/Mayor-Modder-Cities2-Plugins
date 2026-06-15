@@ -1,0 +1,41 @@
+{
+  "name": "cities2-chief-of-staff",
+  "version": "0.1.0",
+  "description": "Cities2 Chief of Staff for Codex.",
+  "author": {
+    "name": "mayor-modder",
+    "url": "https://github.com/mayor-modder"
+  },
+  "homepage": "https://github.com/mayor-modder/Cities2-Chief-of-Staff",
+  "repository": "https://github.com/mayor-modder/Cities2-Chief-of-Staff",
+  "license": "MIT",
+  "keywords": [
+    "cities-skylines-ii",
+    "mcp",
+    "city-analysis",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Cities2 Chief of Staff",
+    "shortDescription": "Local Cities: Skylines II mayoral analysis",
+    "longDescription": "Cities2 Chief of Staff helps Codex brief the mayor using local city evidence from Save Investigator, Cities2-DataExport, and Cities2-InfoLoomBridge when available.",
+    "developerName": "mayor-modder",
+    "category": "Coding",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/mayor-modder/Cities2-Chief-of-Staff",
+    "privacyPolicyURL": "https://github.com/mayor-modder/Cities2-Chief-of-Staff/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/mayor-modder/Cities2-Chief-of-Staff#license",
+    "defaultPrompt": [
+      "Brief me on my city like the mayor.",
+      "What evidence sources are available for my city?",
+      "Analyze my latest Cities: Skylines II city evidence."
+    ],
+    "brandColor": "#1F6F78",
+    "screenshots": []
+  }
+}

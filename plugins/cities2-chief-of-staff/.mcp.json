@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cities2-chief-of-staff": {
+      "command": "node",
+      "args": [
+        "./bin/cities2-chief-of-staff-launcher.js"
+      ],
+      "cwd": "."
+    }
+  }
+}
