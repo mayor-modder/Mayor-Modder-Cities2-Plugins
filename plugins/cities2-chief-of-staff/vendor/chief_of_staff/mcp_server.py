@@ -12,11 +12,13 @@ if __package__ in (None, ""):
     from chief_of_staff.analysis import build_city_report
     from chief_of_staff.save_investigator import SaveInvestigatorRefreshError, refresh_save_investigator_output
     from chief_of_staff.sources import discover_sources
+    from chief_of_staff.transit import build_transit_snapshot
 else:
     from . import __version__
     from .analysis import build_city_report
     from .save_investigator import SaveInvestigatorRefreshError, refresh_save_investigator_output
     from .sources import discover_sources
+    from .transit import build_transit_snapshot
 
 JSON = dict[str, Any]
 SERVER_NAME = "Cities2-ChiefOfStaff"
@@ -89,6 +91,20 @@ def tools_catalog() -> list[JSON]:
                 },
             },
         },
+        {
+            "name": "chief_of_staff_get_transit",
+            "description": "Refresh Save Investigator, then return resolved transit lines, stations, station services, and live queue details.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "mods_data_dir": {"type": "string"},
+                    "save_path": {"type": "string"},
+                    "save_investigator_project": {"type": "string"},
+                    "save_investigator_output_dir": {"type": "string"},
+                    "skip_save_investigator_refresh": {"type": "boolean"},
+                },
+            },
+        },
     ]
 
 
@@ -110,6 +126,12 @@ def _handle_tool_call(req_id: object, params: JSON, config: JSON) -> JSON:
         except ValueError as exception:
             return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": str(exception)}}
         return {"jsonrpc": "2.0", "id": req_id, "result": _text_result(build_city_report(inventory).markdown)}
+    if name == "chief_of_staff_get_transit":
+        try:
+            inventory = _discover_sources(args, config, refresh_save_investigator=True)
+        except ValueError as exception:
+            return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": str(exception)}}
+        return {"jsonrpc": "2.0", "id": req_id, "result": _text_result(build_transit_snapshot(inventory))}
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32602, "message": f"Unknown tool: {name}"}}
 
 

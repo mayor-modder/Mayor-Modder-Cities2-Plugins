@@ -24,10 +24,21 @@ when available.
    data is available.
 2. Use `chief_of_staff_analyze_city` for structured analysis.
 3. Use `chief_of_staff_get_report` for a mayor-facing Markdown brief.
-4. Refresh Save Investigator for report-producing workflows unless the user
+4. Use `chief_of_staff_get_transit` for transit questions that depend on real
+   line names, station names, service joins, or live queue details.
+5. Refresh Save Investigator for report-producing workflows unless the user
    explicitly requests stale or offline evidence.
-5. Treat Cities2-DataExport, Cities2-InfoLoomBridge, and Save Investigator as
+6. Treat Cities2-DataExport, Cities2-InfoLoomBridge, and Save Investigator as
    separate evidence sources with separate confidence.
+
+## Transit Names
+
+For transit answers, prefer the resolved names from `chief_of_staff_get_transit`
+over raw DataExport route numbers, colors, entity indexes, waypoint indexes, or
+route positions. Use line and station names in mayor-facing answers whenever
+the tool provides them. If a live stop queue still has no station mapping, say
+that the station is unresolved and explain the limitation; do not present a
+waypoint/entity id as if it were a useful station name.
 
 ## Companion Mod Install Help
 
@@ -81,5 +92,6 @@ public artifacts. Sanitize, summarize, or keep those details local and private.
 | --- | --- |
 | Diagnosing from one source as if all evidence is present | Name missing DataExport, InfoLoomBridge, or Save Investigator coverage. |
 | Using stale Save Investigator output silently | Refresh first or state the user requested stale/offline evidence. |
+| Calling a route number, color, waypoint, or entity id a transit name | Use `chief_of_staff_get_transit`; if unresolved, say the name is unresolved. |
 | Answering modding workflow questions here | Route to Cities2-MCP. |
 | Dumping raw JSON | Brief the mayor with priorities and confidence notes. |
