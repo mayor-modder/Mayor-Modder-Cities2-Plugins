@@ -1,0 +1,20 @@
+{
+  "name": "mayor-modder-cities2-plugins",
+  "description": "Mayor Modder Cities2 Claude plugin marketplace.",
+  "owner": {
+    "name": "mayor-modder",
+    "url": "https://github.com/mayor-modder"
+  },
+  "plugins": [
+    {
+      "name": "cities2-mcp",
+      "source": "./integrations/anthropic/claude-plugin",
+      "description": "Cities2 MCP and Modding Toolkit for Claude.",
+      "version": "0.1.9",
+      "author": {
+        "name": "mayor-modder",
+        "url": "https://github.com/mayor-modder"
+      }
+    }
+  ]
+}
