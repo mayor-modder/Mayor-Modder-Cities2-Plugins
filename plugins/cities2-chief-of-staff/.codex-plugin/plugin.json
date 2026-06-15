@@ -31,9 +31,9 @@
     "privacyPolicyURL": "https://github.com/mayor-modder/Cities2-Chief-of-Staff/blob/main/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/mayor-modder/Cities2-Chief-of-Staff#license",
     "defaultPrompt": [
-      "Brief me on my latest city evidence.",
-      "What evidence sources are available for my city?",
-      "Analyze my latest Cities: Skylines II city evidence."
+      "Prepare today's mayoral briefing.",
+      "Show me the city's top priorities.",
+      "Recommend the next moves for my city."
     ],
     "brandColor": "#1F6F78",
     "screenshots": []

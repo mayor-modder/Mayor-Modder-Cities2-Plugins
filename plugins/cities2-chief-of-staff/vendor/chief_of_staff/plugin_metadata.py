@@ -49,9 +49,9 @@ def codex_plugin_json() -> str:
                 "privacyPolicyURL": PRIVACY_URL,
                 "termsOfServiceURL": TERMS_URL,
                 "defaultPrompt": [
-                    "Brief me on my latest city evidence.",
-                    "What evidence sources are available for my city?",
-                    "Analyze my latest Cities: Skylines II city evidence.",
+                    "Prepare today's mayoral briefing.",
+                    "Show me the city's top priorities.",
+                    "Recommend the next moves for my city.",
                 ],
                 "brandColor": "#1F6F78",
                 "screenshots": [],

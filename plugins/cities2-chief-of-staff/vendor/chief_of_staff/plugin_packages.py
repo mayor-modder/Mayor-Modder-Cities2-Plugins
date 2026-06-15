@@ -10,14 +10,17 @@ from chief_of_staff import plugin_metadata
 from chief_of_staff.plugin_metadata import SKILL_NAMES
 
 
-PACKAGE_ROOTS = (Path("plugins/cities2-chief-of-staff"),)
+DIST_PACKAGE_ROOT = Path("dist/plugins/cities2-chief-of-staff")
+CATALOG_PACKAGE_ROOT = Path("plugins/cities2-chief-of-staff")
+DEFAULT_CATALOG_ROOT = Path("../Mayor-Modder-Cities2-Plugins")
+
+PACKAGE_ROOTS = (DIST_PACKAGE_ROOT,)
 
 METADATA_FILES: dict[Path, tuple[tuple[Path, Callable[[], str]], ...]] = {
-    Path("plugins/cities2-chief-of-staff"): (
-        (Path("plugins/cities2-chief-of-staff/.codex-plugin/plugin.json"), plugin_metadata.codex_plugin_json),
-        (Path("plugins/cities2-chief-of-staff/.mcp.json"), plugin_metadata.codex_mcp_json),
-        (Path("plugins/cities2-chief-of-staff/README.md"), plugin_metadata.codex_readme_md),
-        (Path(".agents/plugins/marketplace.json"), plugin_metadata.codex_marketplace_json),
+    DIST_PACKAGE_ROOT: (
+        (DIST_PACKAGE_ROOT / ".codex-plugin" / "plugin.json", plugin_metadata.codex_plugin_json),
+        (DIST_PACKAGE_ROOT / ".mcp.json", plugin_metadata.codex_mcp_json),
+        (DIST_PACKAGE_ROOT / "README.md", plugin_metadata.codex_readme_md),
     ),
 }
 
@@ -163,6 +166,36 @@ def check_packages(
     return _unique_sorted(stale)
 
 
+def sync_catalog_package(
+    catalog_root: Path | str = DEFAULT_CATALOG_ROOT,
+    *,
+    repo_root: Path | str = Path.cwd(),
+    package_root: Path = DIST_PACKAGE_ROOT,
+    catalog_package_root: Path = CATALOG_PACKAGE_ROOT,
+) -> tuple[Path, ...]:
+    root = Path(repo_root).resolve()
+    catalog = Path(catalog_root).resolve()
+    marketplace = catalog / ".agents" / "plugins" / "marketplace.json"
+    if not marketplace.is_file():
+        raise FileNotFoundError(f"Catalog marketplace not found: {marketplace}")
+
+    sync_packages(root, package_roots=(package_root,))
+    source = root / package_root
+    target = catalog / catalog_package_root
+    if not target.resolve().is_relative_to(catalog):
+        raise ValueError(f"Catalog package target escapes catalog root: {target}")
+
+    changed = list(_changed_tree_paths(source, target))
+    if target.exists():
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, target)
+    return _unique_sorted(changed)
+
+
 def _selected_package_roots(package_roots: Iterable[Path]) -> tuple[Path, ...]:
     selected = tuple(Path(path) for path in package_roots)
     unknown = [path for path in selected if path not in METADATA_FILES]
@@ -301,8 +334,9 @@ def _unique_sorted(paths: Iterable[Path]) -> tuple[Path, ...]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Sync generated Codex plugin packages.")
-    parser.add_argument("command", choices=("sync", "check"))
+    parser.add_argument("command", choices=("sync", "check", "sync-catalog"))
     parser.add_argument("--repo-root", default=Path.cwd())
+    parser.add_argument("--catalog-root", default=DEFAULT_CATALOG_ROOT)
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo_root)
@@ -316,6 +350,16 @@ def main(argv: list[str] | None = None) -> int:
             print("Plugin package payloads are in sync.")
         return 0
 
+    if args.command == "sync-catalog":
+        changed = sync_catalog_package(args.catalog_root, repo_root=repo_root)
+        if changed:
+            print("Updated catalog plugin package artifacts:")
+            for path in changed:
+                print(f"- {path}")
+        else:
+            print("Catalog plugin package is in sync.")
+        return 0
+
     stale = check_packages(repo_root)
     if not stale:
         print("Plugin package payloads are in sync.")
@@ -323,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print("Plugin package generated artifacts differ from canonical sources.")
     print("Canonical sources: chief_of_staff/plugin_metadata.py, skills/cities2-chief-of-staff, chief_of_staff")
-    print("generated package: plugins/cities2-chief-of-staff and .agents/plugins/marketplace.json")
+    print("generated package: dist/plugins/cities2-chief-of-staff")
     print("Run: python -m chief_of_staff.plugin_packages sync")
     print("Stale paths:")
     for path in stale:
