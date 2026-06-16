@@ -1,0 +1,21 @@
+{
+  "name": "cities2-chief-of-staff",
+  "displayName": "Cities2 Chief of Staff",
+  "version": "0.1.0",
+  "description": "Cities2 Chief of Staff for Claude Code.",
+  "author": {
+    "name": "mayor-modder",
+    "url": "https://github.com/mayor-modder"
+  },
+  "homepage": "https://github.com/mayor-modder/Cities2-Chief-of-Staff",
+  "repository": "https://github.com/mayor-modder/Cities2-Chief-of-Staff",
+  "license": "MIT",
+  "keywords": [
+    "cities-skylines-ii",
+    "mcp",
+    "city-analysis",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

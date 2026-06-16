@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "cities2-chief-of-staff": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/bin/cities2-chief-of-staff-launcher.js"
+      ]
+    }
+  }
+}
