@@ -29,7 +29,7 @@ def default_save_investigator_output_dir() -> Path:
     env = os.environ.get("CHIEF_OF_STAFF_SAVE_INVESTIGATOR_OUTPUT_DIR")
     if env:
         return Path(env).expanduser()
-    tool_root = Path.cwd() / "tools" / "SaveInvestigator"
+    tool_root = _default_save_investigator_tool_root()
     candidates = [
         tool_root / "bin" / "Release" / "net8.0" / "output",
         tool_root / "bin" / "Debug" / "net8.0" / "output",
@@ -45,4 +45,13 @@ def default_save_investigator_project_path() -> Path:
     env = os.environ.get("CHIEF_OF_STAFF_SAVE_INVESTIGATOR_PROJECT")
     if env:
         return Path(env).expanduser()
-    return Path.cwd() / "tools" / "SaveInvestigator" / "SaveInvestigator.csproj"
+    return _default_save_investigator_tool_root() / "SaveInvestigator.csproj"
+
+
+def _default_save_investigator_tool_root() -> Path:
+    package_dir = Path(__file__).resolve().parent
+    if package_dir.parent.name == "vendor":
+        root = package_dir.parent.parent
+    else:
+        root = package_dir.parent
+    return root / "tools" / "SaveInvestigator"
