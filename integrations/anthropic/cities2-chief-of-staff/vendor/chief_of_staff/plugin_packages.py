@@ -12,7 +12,7 @@ from chief_of_staff.plugin_metadata import PLATFORMS, PLATFORMS_BY_KEY, SKILL_NA
 
 DEFAULT_CATALOG_ROOT = Path("../Mayor-Modder-Cities2-Plugins")
 
-MANAGED_DIRS = ("skills", "vendor")
+MANAGED_DIRS = ("skills", "tools", "vendor")
 MANAGED_FILES = (Path("bin") / "cities2-chief-of-staff-launcher.js",)
 IGNORED_DIRS = {"__pycache__", ".pytest_cache"}
 IGNORED_SUFFIXES = {".pyc"}
@@ -236,6 +236,7 @@ def _check_metadata(repo_root: Path, platform: Platform) -> tuple[Path, ...]:
 
 def _write_payload(repo_root: Path, payload_root: Path) -> None:
     _copy_skills(repo_root, payload_root)
+    _copy_tools(repo_root, payload_root)
     launcher = payload_root / "bin" / "cities2-chief-of-staff-launcher.js"
     launcher.parent.mkdir(parents=True, exist_ok=True)
     launcher.write_text(LAUNCHER_JS, encoding="utf-8", newline="\n")
@@ -265,6 +266,18 @@ def _copy_skills(repo_root: Path, payload_root: Path) -> None:
             target,
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"),
         )
+
+
+def _copy_tools(repo_root: Path, payload_root: Path) -> None:
+    source = repo_root / "tools" / "SaveInvestigator"
+    if not source.is_dir():
+        raise FileNotFoundError(f"Canonical Save Investigator source not found: {source}")
+    target = payload_root / "tools" / "SaveInvestigator"
+    shutil.copytree(
+        source,
+        target,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", "bin", "obj", "output"),
+    )
 
 
 def _replace_payload(repo_root: Path, package_root: Path) -> tuple[Path, ...]:
@@ -379,7 +392,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print("Plugin package generated artifacts differ from canonical sources.")
-    print("Canonical sources: chief_of_staff/plugin_metadata.py, skills/cities2-chief-of-staff, chief_of_staff")
+    print("Canonical sources: chief_of_staff/plugin_metadata.py, skills/cities2-chief-of-staff, tools/SaveInvestigator, chief_of_staff")
     print("generated packages: " + ", ".join(platform.dist_package_root.as_posix() for platform in platforms))
     print("Run: python -m chief_of_staff.plugin_packages sync")
     print("Stale paths:")
