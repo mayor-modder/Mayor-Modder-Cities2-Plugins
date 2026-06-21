@@ -7,27 +7,39 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from chief_of_staff import plugin_metadata
-from chief_of_staff.plugin_metadata import SKILL_NAMES
+from chief_of_staff.plugin_metadata import PLATFORMS, PLATFORMS_BY_KEY, SKILL_NAMES, Platform
 
 
-DIST_PACKAGE_ROOT = Path("dist/plugins/cities2-chief-of-staff")
-CATALOG_PACKAGE_ROOT = Path("plugins/cities2-chief-of-staff")
 DEFAULT_CATALOG_ROOT = Path("../Mayor-Modder-Cities2-Plugins")
-
-PACKAGE_ROOTS = (DIST_PACKAGE_ROOT,)
-
-METADATA_FILES: dict[Path, tuple[tuple[Path, Callable[[], str]], ...]] = {
-    DIST_PACKAGE_ROOT: (
-        (DIST_PACKAGE_ROOT / ".codex-plugin" / "plugin.json", plugin_metadata.codex_plugin_json),
-        (DIST_PACKAGE_ROOT / ".mcp.json", plugin_metadata.codex_mcp_json),
-        (DIST_PACKAGE_ROOT / "README.md", plugin_metadata.codex_readme_md),
-    ),
-}
 
 MANAGED_DIRS = ("skills", "tools", "vendor")
 MANAGED_FILES = (Path("bin") / "cities2-chief-of-staff-launcher.js",)
 IGNORED_DIRS = {"__pycache__", ".pytest_cache"}
 IGNORED_SUFFIXES = {".pyc"}
+
+
+def _metadata_files(platform: Platform) -> tuple[tuple[Path, Callable[[], str]], ...]:
+    root = platform.dist_package_root
+    return (
+        (root / platform.manifest_dir / "plugin.json", platform.plugin_json),
+        (root / ".mcp.json", platform.mcp_json),
+        (root / "README.md", platform.readme_md),
+    )
+
+
+def _selected_platforms(package_roots: Iterable[Path] | None) -> tuple[Platform, ...]:
+    if package_roots is None:
+        return PLATFORMS
+    by_root = {platform.dist_package_root: platform for platform in PLATFORMS}
+    selected: list[Platform] = []
+    for raw in package_roots:
+        path = Path(raw)
+        platform = by_root.get(path)
+        if platform is None:
+            raise ValueError(f"Unknown plugin package root: {path}")
+        selected.append(platform)
+    return tuple(selected)
+
 
 LAUNCHER_JS = """#!/usr/bin/env node
 
@@ -136,33 +148,33 @@ if __name__ == "__main__":
 def sync_packages(
     repo_root: Path | str = Path.cwd(),
     *,
-    package_roots: Iterable[Path] = PACKAGE_ROOTS,
+    package_roots: Iterable[Path] | None = None,
 ) -> tuple[Path, ...]:
     root = Path(repo_root).resolve()
     changed: list[Path] = []
-    for package_root in _selected_package_roots(package_roots):
-        changed.extend(_replace_payload(root, package_root))
-        changed.extend(_sync_metadata(root, package_root))
+    for platform in _selected_platforms(package_roots):
+        changed.extend(_replace_payload(root, platform.dist_package_root))
+        changed.extend(_sync_metadata(root, platform))
     return _unique_sorted(changed)
 
 
 def check_packages(
     repo_root: Path | str = Path.cwd(),
     *,
-    package_roots: Iterable[Path] = PACKAGE_ROOTS,
+    package_roots: Iterable[Path] | None = None,
 ) -> tuple[Path, ...]:
     root = Path(repo_root).resolve()
     stale: list[Path] = []
     with tempfile.TemporaryDirectory(prefix="chief-of-staff-plugin-payload-") as tmp:
         tmp_package = Path(tmp) / "payload"
         _write_payload(root, tmp_package)
-        for package_root in _selected_package_roots(package_roots):
-            package_abs = root / package_root
+        for platform in _selected_platforms(package_roots):
+            package_abs = root / platform.dist_package_root
             for dirname in MANAGED_DIRS:
                 stale.extend(_changed_tree_paths(tmp_package / dirname, package_abs / dirname))
             for filename in MANAGED_FILES:
                 stale.extend(_changed_paths(tmp_package / filename, package_abs / filename))
-            stale.extend(_check_metadata(root, package_root))
+            stale.extend(_check_metadata(root, platform))
     return _unique_sorted(stale)
 
 
@@ -170,38 +182,56 @@ def sync_catalog_package(
     catalog_root: Path | str = DEFAULT_CATALOG_ROOT,
     *,
     repo_root: Path | str = Path.cwd(),
-    package_root: Path = DIST_PACKAGE_ROOT,
-    catalog_package_root: Path = CATALOG_PACKAGE_ROOT,
+    platforms: Iterable[Platform] = PLATFORMS,
 ) -> tuple[Path, ...]:
     root = Path(repo_root).resolve()
     catalog = Path(catalog_root).resolve()
-    marketplace = catalog / ".agents" / "plugins" / "marketplace.json"
-    if not marketplace.is_file():
-        raise FileNotFoundError(f"Catalog marketplace not found: {marketplace}")
+    platforms = tuple(platforms)
 
-    sync_packages(root, package_roots=(package_root,))
-    source = root / package_root
-    target = catalog / catalog_package_root
-    if not target.resolve().is_relative_to(catalog):
-        raise ValueError(f"Catalog package target escapes catalog root: {target}")
+    for platform in platforms:
+        marketplace = catalog / platform.catalog_marketplace_rel
+        if not marketplace.is_file():
+            raise FileNotFoundError(f"Catalog marketplace not found: {marketplace}")
 
-    changed = list(_changed_tree_paths(source, target))
-    if target.exists():
-        if target.is_dir():
-            shutil.rmtree(target)
-        else:
-            target.unlink()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source, target)
+    sync_packages(root, package_roots=tuple(platform.dist_package_root for platform in platforms))
+
+    changed: list[Path] = []
+    for platform in platforms:
+        source = root / platform.dist_package_root
+        target = catalog / platform.catalog_package_root
+        if not target.resolve().is_relative_to(catalog):
+            raise ValueError(f"Catalog package target escapes catalog root: {target}")
+
+        changed.extend(_changed_tree_paths(source, target))
+        if target.exists():
+            if target.is_dir():
+                shutil.rmtree(target)
+            else:
+                target.unlink()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, target)
     return _unique_sorted(changed)
 
 
-def _selected_package_roots(package_roots: Iterable[Path]) -> tuple[Path, ...]:
-    selected = tuple(Path(path) for path in package_roots)
-    unknown = [path for path in selected if path not in METADATA_FILES]
-    if unknown:
-        raise ValueError(f"Unknown plugin package root: {unknown[0]}")
-    return selected
+def _sync_metadata(repo_root: Path, platform: Platform) -> tuple[Path, ...]:
+    changed: list[Path] = []
+    for target_rel, builder in _metadata_files(platform):
+        target = repo_root / target_rel
+        expected = builder()
+        if not target.is_file() or target.read_text(encoding="utf-8") != expected:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(expected, encoding="utf-8", newline="\n")
+            changed.append(target)
+    return _unique_sorted(changed)
+
+
+def _check_metadata(repo_root: Path, platform: Platform) -> tuple[Path, ...]:
+    stale: list[Path] = []
+    for target_rel, builder in _metadata_files(platform):
+        target = repo_root / target_rel
+        if not target.is_file() or target.read_text(encoding="utf-8") != builder():
+            stale.append(target)
+    return tuple(stale)
 
 
 def _write_payload(repo_root: Path, payload_root: Path) -> None:
@@ -279,27 +309,6 @@ def _replace_payload(repo_root: Path, package_root: Path) -> tuple[Path, ...]:
     return _unique_sorted(changed)
 
 
-def _sync_metadata(repo_root: Path, package_root: Path) -> tuple[Path, ...]:
-    changed: list[Path] = []
-    for target_rel, builder in METADATA_FILES[package_root]:
-        target = repo_root / target_rel
-        expected = builder()
-        if not target.is_file() or target.read_text(encoding="utf-8") != expected:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(expected, encoding="utf-8", newline="\n")
-            changed.append(target)
-    return _unique_sorted(changed)
-
-
-def _check_metadata(repo_root: Path, package_root: Path) -> tuple[Path, ...]:
-    stale: list[Path] = []
-    for target_rel, builder in METADATA_FILES[package_root]:
-        target = repo_root / target_rel
-        if not target.is_file() or target.read_text(encoding="utf-8") != builder():
-            stale.append(target)
-    return tuple(stale)
-
-
 def _changed_paths(expected: Path, actual: Path) -> tuple[Path, ...]:
     if not actual.is_file():
         return (actual,)
@@ -346,15 +355,19 @@ def _unique_sorted(paths: Iterable[Path]) -> tuple[Path, ...]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Sync generated Codex plugin packages.")
+    parser = argparse.ArgumentParser(description="Sync generated plugin packages.")
     parser.add_argument("command", choices=("sync", "check", "sync-catalog"))
     parser.add_argument("--repo-root", default=Path.cwd())
     parser.add_argument("--catalog-root", default=DEFAULT_CATALOG_ROOT)
+    parser.add_argument("--target", choices=("codex", "claude", "all"), default="all")
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo_root)
+    platforms = PLATFORMS if args.target == "all" else (PLATFORMS_BY_KEY[args.target],)
+    selected_roots = tuple(platform.dist_package_root for platform in platforms)
+
     if args.command == "sync":
-        changed = sync_packages(repo_root)
+        changed = sync_packages(repo_root, package_roots=selected_roots)
         if changed:
             print("Updated generated plugin package artifacts:")
             for path in changed:
@@ -364,7 +377,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "sync-catalog":
-        changed = sync_catalog_package(args.catalog_root, repo_root=repo_root)
+        changed = sync_catalog_package(args.catalog_root, repo_root=repo_root, platforms=platforms)
         if changed:
             print("Updated catalog plugin package artifacts:")
             for path in changed:
@@ -373,14 +386,14 @@ def main(argv: list[str] | None = None) -> int:
             print("Catalog plugin package is in sync.")
         return 0
 
-    stale = check_packages(repo_root)
+    stale = check_packages(repo_root, package_roots=selected_roots)
     if not stale:
         print("Plugin package payloads are in sync.")
         return 0
 
     print("Plugin package generated artifacts differ from canonical sources.")
-    print("Canonical sources: chief_of_staff/plugin_metadata.py, skills/brief, tools/SaveInvestigator, chief_of_staff")
-    print("generated package: dist/plugins/cities2-chief-of-staff")
+    print("Canonical sources: chief_of_staff/plugin_metadata.py, skills/cities2-chief-of-staff, tools/SaveInvestigator, chief_of_staff")
+    print("generated packages: " + ", ".join(platform.dist_package_root.as_posix() for platform in platforms))
     print("Run: python -m chief_of_staff.plugin_packages sync")
     print("Stale paths:")
     for path in stale:

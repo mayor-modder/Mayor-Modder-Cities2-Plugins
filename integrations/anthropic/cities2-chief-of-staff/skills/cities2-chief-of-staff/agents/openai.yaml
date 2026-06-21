@@ -1,4 +1,10 @@
 interface:
   display_name: "Cities2 Chief of Staff"
   short_description: "Brief CS2 mayors from local city evidence"
-  default_prompt: "Use $cities2-chief-of-staff to prepare today's mayoral briefing."
+  default_prompt: "Use $cities2-chief-of-staff to brief a Cities: Skylines II mayor from local city evidence and recommend priorities."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "cities2-chief-of-staff"
+      description: "Cities2 Chief of Staff local server with Save Investigator, DataExport, and InfoLoomBridge evidence tools"
