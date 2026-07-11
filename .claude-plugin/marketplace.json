@@ -19,8 +19,8 @@
     {
       "name": "cities2-mcp",
       "source": "./integrations/anthropic/claude-plugin",
-      "description": "Cities2 MCP and Modding Toolkit for Claude.",
-      "version": "0.1.9",
+      "description": "Cities: Skylines II wiki, encyclopedia, and mod workflow tools for Claude.",
+      "version": "0.2.0",
       "author": {
         "name": "mayor-modder",
         "url": "https://github.com/mayor-modder"

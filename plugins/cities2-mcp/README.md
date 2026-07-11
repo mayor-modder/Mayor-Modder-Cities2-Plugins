@@ -2,7 +2,7 @@
 
 # Cities2 MCP and Modding Toolkit Codex plugin
 
-This is the Codex plugin package for Cities2 MCP and Modding Toolkit. It bundles five user-facing agent skills and a plugin-local MCP server launcher.
+This is the Codex plugin package for Cities2 MCP and Modding Toolkit. It bundles five user-facing agent skills, the Cities: Skylines II Wiki corpus, local game encyclopedia lookup when the game is installed, project workflow templates, and a plugin-local MCP server launcher.
 
 Included skills: `cities2-knowledge`, `cities2-modding`, `cities2-mod-review`, `cities2-mod-debugging`, and `cities2-mod-release`.
 
