@@ -1,7 +1,7 @@
 {
   "name": "cities2-mcp",
   "displayName": "Cities2 MCP and Modding Toolkit",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Cities: Skylines II wiki, encyclopedia, and mod workflow tools for Claude.",
   "author": {
     "name": "mayor-modder",
