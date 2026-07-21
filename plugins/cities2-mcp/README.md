@@ -2,11 +2,11 @@
 
 # Cities2 MCP and Modding Toolkit Codex plugin
 
-This is the Codex plugin package for Cities2 MCP and Modding Toolkit. It bundles five user-facing agent skills, the Cities: Skylines II Wiki corpus, local game encyclopedia lookup when the game is installed, project workflow templates, and a plugin-local MCP server launcher.
+This is the Codex plugin package for Cities2 MCP and Modding Toolkit. It bundles five user-facing agent skills, the Cities: Skylines II Wiki corpus, curated research reports, project workflow templates, and a plugin-local MCP server launcher. When the game is installed, it can separately read the user's local game encyclopedia; that extracted content is not bundled.
 
 Included skills: `cities2-knowledge`, `cities2-modding`, `cities2-mod-review`, `cities2-mod-debugging`, and `cities2-mod-release`.
 
-The plugin `.mcp.json` points at `bin/cities2-mcp-launcher.js`, which runs the vendored Python package from `vendor/cities2_mcp`. Codex currently launches the server from the installed plugin cache, so wiki and encyclopedia tools work immediately, while direct MCP workflow tools may be allowlist-blocked for the project you opened. The bundled `cities2-modding` skill includes an explicit template-copy fallback for that case.
+The plugin `.mcp.json` points at `bin/cities2-mcp-launcher.js`, which runs the vendored Python package from `vendor/cities2_mcp`. Codex currently launches the server from the installed plugin cache, so bundled wiki and research tools work immediately; local game encyclopedia lookup is available when the game is installed. Direct MCP workflow tools may be allowlist-blocked for the project you opened, and the bundled `cities2-modding` skill includes an explicit template-copy fallback for that case.
 
 Install from this repository marketplace:
 

@@ -1,6 +1,6 @@
 {
   "name": "cities2-mcp",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Cities: Skylines II wiki, encyclopedia, and mod workflow tools for Codex.",
   "author": {
     "name": "mayor-modder",
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Cities2 MCP and Modding Toolkit",
     "shortDescription": "CS2 wiki, encyclopedia, and mod workflows",
-    "longDescription": "Cities2 MCP and Modding Toolkit gives Codex local access to bundled Cities: Skylines II Wiki text, the user's installed in-game encyclopedia when available, five agent skills, and mod project workflow tools for trusted workspaces.",
+    "longDescription": "Cities2 MCP and Modding Toolkit gives Codex local access to the bundled Cities: Skylines II Wiki corpus and curated research reports, the user's locally extracted in-game encyclopedia when available, five agent skills, and mod project workflow tools for trusted workspaces.",
     "developerName": "mayor-modder",
     "category": "Coding",
     "capabilities": [
